@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context https://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/aop https://www.springframework.org/schema/aop/spring-aop.xsd http://www.springframework.org/schema/cache http://www.springframework.org/schema/cache/spring-cache.xsd http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd">
+
+<!--    设置spring的bean扫描器-->
+    <context:component-scan base-package="com.zwl.aop" use-default-filters="true">
+        <!--不扫描控制器-->
+        <context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+    </context:component-scan>
+
+    <!--    加载连接数据库驱动的配置信息-->
+    <context:property-placeholder location="classpath:db.properties"/>
+    <!--    配置数据源-->
+    <bean id="pooledDataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+        <property name="jdbcUrl" value="${jdbc.jdbcUrl}"/>
+        <property name="password" value="${jdbc.password}"/>
+        <property name="driverClass" value="${jdbc.driverClass}"/>
+        <property name="user" value="${jdbc.user}"/>
+        <property name="initialPoolSize" value="${jdbc.initialPoolSize}"/>
+        <property name="minPoolSize" value="${jdbc.minPoolSize}"/>
+        <property name="maxPoolSize" value="${jdbc.maxPoolSize}"/>
+        <property name="acquireIncrement" value="${jdbc.acquireIncrement}"/>
+        <property name="maxStatements" value="${jdbc.maxStatements}"/>
+        <property name="maxStatementsPerConnection" value="${jdbc.maxStatementsPerConnection}"/>
+    </bean>
+
+<!--    配置jdbcTemplate-->
+    <bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+        <constructor-arg ref="pooledDataSource"/>
+    </bean>
+
+<!--    配置jdbc-->
+<!--&lt;!&ndash;    将目标类和切面类都加入到IOC容器中&ndash;&gt;-->
+<!--    <bean id="myMathCalculator" class="com.zwl.aop.service.serviceImpl.MyMathCalculator"/>-->
+<!--    <bean id="logUtils" class="com.zwl.aop.utils.LogUtils"/>-->
+
+<!--&lt;!&ndash;    使用xml的方式配置切面类&ndash;&gt;-->
+<!--    <aop:config>-->
+<!--        <aop:pointcut id="pointCut" expression="execution(public * com.zwl.aop.service.serviceImpl.MyMathCalculator.*(..))"/>-->
+<!--        <aop:aspect id="logUtilsAspect" ref="logUtils">-->
+<!--            <aop:around method="logAround" pointcut-ref="pointCut" />-->
+<!--            <aop:before method="logStart" pointcut-ref="pointCut"/>-->
+<!--            <aop:after-returning method="logReturn" pointcut-ref="pointCut" returning="result"/>-->
+<!--            <aop:after-throwing method="logException" pointcut-ref="pointCut" throwing="e"/>-->
+<!--            <aop:after method="logEnd" pointcut-ref="pointCut"/>-->
+<!--        </aop:aspect>-->
+<!--    </aop:config>-->
+
+<!--
+1，将目标类和切面类的加入到IOC容器中
+2，切面类需要特别注明：使用@Aspect注解
+3，使用特定注解，标明切面类中的方法，是何时何地运行
+-->
+<!--   开启AspectJ注解配置切面类 -->
+    <aop:aspectj-autoproxy/>
+
+<!--事务配置-->
+
+<!--    配置事务管理器-->
+    <bean id="dataSourceTransactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="pooledDataSource"/>
+    </bean>
+    <!--    开启声明式事务的注解模式-->
+    <tx:annotation-driven transaction-manager="dataSourceTransactionManager"/>
+
+
+<!--&lt;!&ndash;    配置基于xml的声明式事务&ndash;&gt;-->
+<!--    <tx:advice id="my_tx" transaction-manager="dataSourceTransactionManager">-->
+<!--        <tx:attributes>-->
+                <!--指明哪些方法是事务方法。切入点表达式，只是说事务管理理器要切入这些方法-->
+<!--            <tx:method name="checkOut" propagation="REQUIRED" isolation="READ_COMMITTED"-->
+<!--                       rollback-for="DataAccessException.class,NullPointerException.class, SQLException.class"-->
+<!--                        timeout="30" read-only="false"/>-->
+<!--        </tx:attributes>-->
+<!--    </tx:advice>-->
+
+<!--&lt;!&ndash;    配置切面类&ndash;&gt;-->
+<!--    <aop:config>-->
+<!--        <aop:pointcut id="Tx_checkout" expression="execution(public * com.zwl.aop.service.serviceImpl.BookServiceImpl.checkOut(..))"/>-->
+
+<!--&lt;!&ndash;        将切入点表达式与事务属性配置，关联&ndash;&gt;-->
+<!--        <aop:advisor advice-ref="my_tx" pointcut-ref="Tx_checkout"/>-->
+<!--    </aop:config>-->
+</beans>

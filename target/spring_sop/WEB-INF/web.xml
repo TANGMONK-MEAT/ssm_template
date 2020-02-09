@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd"
+         version="4.0">
+  <display-name>spring_aop</display-name>
+  <welcome-file-list>
+    <welcome-file>index.jsp</welcome-file>
+  </welcome-file-list>
+
+<!--  tomcat的监听器创建和销毁Spring的IOC容器-->
+  <context-param>
+    <param-name>contextConfigLocation</param-name>
+    <param-value>classpath:applicationContext.xml</param-value>
+  </context-param>
+  <listener>
+    <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+  </listener>
+
+
+<!--
+配置SpringMVC的前置控制器
+拦截所有请求，并进行智能派发
+这个前端控制器，是一个servlet，
+由web.xml配置这个servlet，交给tomcat
+-->
+  <servlet>
+    <servlet-name>springDispatcherServlet</servlet-name>
+    <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+    <init-param>
+      <!--
+      contextConfigLocation：指定SpringMVC的配置文件的位置
+      -->
+      <param-name>contextConfigLocation</param-name>
+      <param-value>classpath:springMVC.xml</param-value>
+    </init-param>
+      <!--
+      servlet启动加载，servlet原本是在第一次访问时，才创建对象。
+      load-on-startup:在服务器启动时，就会创建servlet对象，值越小优先级越高。
+      -->
+    <load-on-startup>1</load-on-startup>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>springDispatcherServlet</servlet-name>
+    <!--
+    拦截请求
+    / 和 /* 都表示拦截所有请求;
+    / 会拦截所有请求，但是不会拦截*.jsp，能保证jsp页面被正常访问
+    /* 拦截的范围更大，会拦截*.jsp页面
+    *.jsp是tomcat处理的
+
+    此处的url-pattern是代表拦截请求路径
+    tomcat有url-pattern来处理请求路径
+    这里的url-pattern会覆盖tomcat中的url-pattern，使tomcat中的url-pattern不起作用
+    -->
+    <url-pattern>/</url-pattern>
+  </servlet-mapping>
+
+  <!--  配置一个字符编码地Filter,必须在所有地filter地之前，否则不起作用-->
+  <filter>
+    <filter-name>characterEncodingFilter</filter-name>
+    <filter-class>org.springframework.web.filter.CharacterEncodingFilter</filter-class>
+    <init-param>
+      <param-name>encoding</param-name>
+      <param-value>utf-8</param-value>
+    </init-param>
+    <init-param>
+      <param-name>forceRequestEncoding</param-name>
+      <param-value>true</param-value>
+    </init-param>
+    <init-param>
+      <param-name>forceResponseEncoding</param-name>
+      <param-value>true</param-value>
+    </init-param>
+  </filter>
+  <filter-mapping>
+    <filter-name>characterEncodingFilter</filter-name>
+    <url-pattern>/*</url-pattern>
+  </filter-mapping>
+
+
+<!--
+配置Rest风格的请求
+-->
+  <filter>
+    <filter-name>hiddenHttpMethodFilter</filter-name>
+    <filter-class>org.springframework.web.filter.HiddenHttpMethodFilter</filter-class>
+  </filter>
+  <filter-mapping>
+    <filter-name>hiddenHttpMethodFilter</filter-name>
+    <url-pattern>/*</url-pattern>
+  </filter-mapping>
+
+
+
+</web-app>
